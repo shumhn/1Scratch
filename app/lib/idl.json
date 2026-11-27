@@ -1,0 +1,1891 @@
+{
+  "address": "CwvfeJmKV5cEJwrUU3M12C3d97vf7MyUoT6BnSCJNqCP",
+  "metadata": {
+    "name": "scratchers",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Stock Scratchers — VRF scratch cards that pay prizes in tokenized stocks & Solana assets"
+  },
+  "instructions": [
+    {
+      "name": "add_asset",
+      "docs": [
+        "Register a prize asset + its house inventory vault."
+      ],
+      "discriminator": [
+        81,
+        53,
+        134,
+        142,
+        243,
+        73,
+        42,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "house"
+          ]
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "house"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "symbol",
+          "type": {
+            "array": [
+              "u8",
+              8
+            ]
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "defined": {
+              "name": "AssetKind"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "buy_card",
+      "docs": [
+        "Buy a sealed card with USDC. Snapshots the prize table + price paid."
+      ],
+      "discriminator": [
+        113,
+        142,
+        149,
+        246,
+        22,
+        115,
+        156,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset.mint",
+                "account": "Asset"
+              }
+            ]
+          }
+        },
+        {
+          "name": "card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "house.card_nonce",
+                "account": "House"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_ata",
+          "writable": true
+        },
+        {
+          "name": "usdc_treasury",
+          "writable": true
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_payout",
+      "docs": [
+        "Claim the prize on base layer, valued at the keeper's latest price.",
+        "Blank cards (prize 0) just close out — no transfer."
+      ],
+      "discriminator": [
+        127,
+        240,
+        132,
+        62,
+        227,
+        198,
+        146,
+        133
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "arg",
+                "path": "card_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset.mint",
+                "account": "Asset"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "asset_mint"
+        },
+        {
+          "name": "owner_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "_card_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "delegate_card",
+      "docs": [
+        "Delegate the card PDA to the Ephemeral Rollup (base layer)."
+      ],
+      "discriminator": [
+        143,
+        76,
+        125,
+        25,
+        4,
+        123,
+        254,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buffer_card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "card"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                177,
+                130,
+                153,
+                187,
+                108,
+                213,
+                164,
+                85,
+                183,
+                9,
+                8,
+                141,
+                193,
+                127,
+                55,
+                17,
+                192,
+                8,
+                227,
+                97,
+                54,
+                121,
+                149,
+                24,
+                236,
+                116,
+                225,
+                142,
+                123,
+                201,
+                179,
+                76
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "card"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "card"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "arg",
+                "path": "card_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_program",
+          "address": "CwvfeJmKV5cEJwrUU3M12C3d97vf7MyUoT6BnSCJNqCP"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "card_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_house",
+      "docs": [
+        "One-time house setup: authority, keeper, card price, prize table."
+      ],
+      "discriminator": [
+        180,
+        46,
+        86,
+        125,
+        135,
+        107,
+        214,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "house"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "keeper",
+          "type": "pubkey"
+        },
+        {
+          "name": "card_price_usdc",
+          "type": "u64"
+        },
+        {
+          "name": "tiers",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "Tier"
+              }
+            }
+          }
+        },
+        {
+          "name": "max_price_age_secs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "process_undelegation",
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "base_account",
+          "writable": true
+        },
+        {
+          "name": "buffer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  110,
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  101,
+                  45,
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                181,
+                183,
+                0,
+                225,
+                242,
+                87,
+                58,
+                192,
+                204,
+                6,
+                34,
+                1,
+                52,
+                74,
+                207,
+                151,
+                184,
+                53,
+                6,
+                235,
+                140,
+                229,
+                25,
+                152,
+                204,
+                98,
+                126,
+                24,
+                147,
+                128,
+                167,
+                62
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_seeds",
+          "type": {
+            "vec": "bytes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "scratch",
+      "docs": [
+        "Scratch the card on the ER: fire a VRF request against the",
+        "(fee-exempt) delegated oracle queue.",
+        "",
+        "A pending request may be retried after a timeout. The pending seed and",
+        "timestamp use the randomness field until the callback replaces it with",
+        "the actual VRF result. A superseded callback cannot resolve the card."
+      ],
+      "discriminator": [
+        201,
+        202,
+        192,
+        54,
+        188,
+        196,
+        244,
+        22
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "arg",
+                "path": "card_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "oracle_queue",
+          "docs": [
+            "the base queue on Solana, and the localnet test queues."
+          ],
+          "writable": true
+        },
+        {
+          "name": "program_identity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_program",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_card_id",
+          "type": "u64"
+        },
+        {
+          "name": "client_seed",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "sell_asset",
+      "docs": [
+        "Devnet dealer redemption: return mock asset tokens to the house and",
+        "receive mock USDC from its funded treasury at the current keeper price.",
+        "This is a treasury quote, not a DEX trade or a redeemable stock sale."
+      ],
+      "discriminator": [
+        234,
+        62,
+        61,
+        70,
+        99,
+        53,
+        89,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset.mint",
+                "account": "Asset"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset_mint"
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "owner_asset_ata",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "usdc_treasury",
+          "writable": true
+        },
+        {
+          "name": "owner_usdc_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_usdc_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_price",
+      "docs": [
+        "Keeper price push (base layer). Claims read this."
+      ],
+      "discriminator": [
+        16,
+        19,
+        182,
+        8,
+        149,
+        83,
+        72,
+        181
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "keeper",
+          "signer": true
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "asset.mint",
+                "account": "Asset"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "price_usd_e8",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_card",
+      "docs": [
+        "Commit the revealed card and undelegate it back to base (ER)."
+      ],
+      "discriminator": [
+        150,
+        103,
+        52,
+        73,
+        54,
+        67,
+        201,
+        57
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "card",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "arg",
+                "path": "card_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_card_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "vrf_callback",
+      "docs": [
+        "VRF oracle fulfillment (ER). First fulfillment wins; duplicate or late",
+        "callbacks are no-ops so a card can never resolve twice."
+      ],
+      "discriminator": [
+        248,
+        224,
+        55,
+        227,
+        56,
+        10,
+        108,
+        36
+      ],
+      "accounts": [
+        {
+          "name": "vrf_program_identity",
+          "docs": [
+            "Scoped VRF identity signer — see SCOPED_VRF_IDENTITY note above.",
+            "(Declared manually so the macro does not inject the runtime-derivation variant.)"
+          ],
+          "signer": true,
+          "address": "2H8Qw2c1iAyQFTHfx6A16JZkDVBaCc4eLxU6s1RS94YR"
+        },
+        {
+          "name": "card",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "client_seed",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Asset",
+      "discriminator": [
+        234,
+        180,
+        241,
+        252,
+        139,
+        224,
+        160,
+        8
+      ]
+    },
+    {
+      "name": "Card",
+      "discriminator": [
+        166,
+        250,
+        46,
+        230,
+        152,
+        63,
+        140,
+        182
+      ]
+    },
+    {
+      "name": "House",
+      "discriminator": [
+        21,
+        145,
+        94,
+        109,
+        254,
+        199,
+        210,
+        151
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "WeightsMustSumToTotal",
+      "msg": "Prize table weights must sum to 10_000_000 ppm"
+    },
+    {
+      "code": 6001,
+      "name": "TooManyTiers",
+      "msg": "Too many prize tiers (max 8)"
+    },
+    {
+      "code": 6002,
+      "name": "EmptyPrizeTable",
+      "msg": "Prize table must have at least one tier"
+    },
+    {
+      "code": 6003,
+      "name": "HouseInactive",
+      "msg": "House is paused"
+    },
+    {
+      "code": 6004,
+      "name": "AssetInactive",
+      "msg": "Asset is not active"
+    },
+    {
+      "code": 6005,
+      "name": "CardNotSealed",
+      "msg": "Card is not sealed"
+    },
+    {
+      "code": 6006,
+      "name": "CardNotRequested",
+      "msg": "Card is not waiting on randomness"
+    },
+    {
+      "code": 6007,
+      "name": "CardNotRevealed",
+      "msg": "Card is not revealed yet"
+    },
+    {
+      "code": 6008,
+      "name": "StalePrice",
+      "msg": "Asset price is stale — keeper update required"
+    },
+    {
+      "code": 6009,
+      "name": "MathOverflow",
+      "msg": "Math overflow"
+    },
+    {
+      "code": 6010,
+      "name": "NotKeeper",
+      "msg": "Only the house keeper can push prices"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidOracleQueue",
+      "msg": "Invalid oracle queue for this runtime"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidCardPrice",
+      "msg": "Card price must be greater than zero"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidPrice",
+      "msg": "Price must be greater than zero"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidPriceAge",
+      "msg": "Maximum price age must be greater than zero"
+    },
+    {
+      "code": 6015,
+      "name": "RetryTooSoon",
+      "msg": "Wait before retrying the VRF request"
+    },
+    {
+      "code": 6016,
+      "name": "RetrySeedUnchanged",
+      "msg": "Use a new seed for the retried VRF request"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidSellAmount",
+      "msg": "Sell amount must be greater than zero"
+    },
+    {
+      "code": 6018,
+      "name": "SellSlippageExceeded",
+      "msg": "Sale quote is below the requested minimum"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidUsdcDecimals",
+      "msg": "House payment mint must have six decimals"
+    }
+  ],
+  "types": [
+    {
+      "name": "Asset",
+      "docs": [
+        "A prize asset the house pays out (xStock mock, memecoin mock, …).",
+        "The keeper writes `price_usd_e8` on the BASE layer; claims read it there."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "docs": [
+              "ATA of the house PDA holding the prize inventory."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "AssetKind"
+              }
+            }
+          },
+          {
+            "name": "price_usd_e8",
+            "docs": [
+              "Latest keeper-written USD price, 8 decimals."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "price_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AssetKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Stock"
+          },
+          {
+            "name": "Coin"
+          },
+          {
+            "name": "Collectible"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Card",
+      "docs": [
+        "One scratch card. Delegated to the ER for the scratch, committed back,",
+        "settled on base. Small on purpose (well under the 10,240-byte commit cap).",
+        "",
+        "`card_price_usdc` + `tiers` are snapshotted from House at buy time because",
+        "the VRF callback runs on the ER, where the base-layer House is unreadable."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "asset",
+            "docs": [
+              "Prize asset chosen at buy time. (Mystery pool = V2.)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "CardState"
+              }
+            }
+          },
+          {
+            "name": "multiplier_bps",
+            "docs": [
+              "Set when the VRF callback lands."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "prize_usd_e6",
+            "docs": [
+              "Final USD value of the prize, e6. 0 = blank."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "randomness",
+            "docs": [
+              "Pending: request timestamp in bytes 0..8 and seed in byte 8.",
+              "Revealed: the VRF result (audit trail)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "card_price_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "tiers",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "Tier"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "tier_count",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CardState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Sealed"
+          },
+          {
+            "name": "RandomnessRequested"
+          },
+          {
+            "name": "Revealed"
+          },
+          {
+            "name": "Claimed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "House",
+      "docs": [
+        "Global game configuration + treasury pointer. One per deployment."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "docs": [
+              "Keeper wallet allowed to push price updates."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_treasury",
+            "docs": [
+              "ATA of this PDA for `usdc_mint`; card payments land here."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "card_price_usdc",
+            "docs": [
+              "Card price in USDC e6 (1 USDC = 1_000_000)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "tiers",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "Tier"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "tier_count",
+            "type": "u8"
+          },
+          {
+            "name": "card_nonce",
+            "docs": [
+              "Monotonic card id counter."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_price_age_secs",
+            "docs": [
+              "Reject claims whose price is older than this (seconds)."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tier",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "multiplier_bps",
+            "docs": [
+              "Prize multiplier in bps of `MULTIPLIER_BASE_BPS`. 0 = blank card."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "weight_ppm",
+            "docs": [
+              "Weight in ppm; all tiers in a table sum to TOTAL_PPM."
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ]
+}
