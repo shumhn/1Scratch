@@ -2,6 +2,8 @@
 
 **Scratch. Match. Own.**
 
+**[Open 1Scratch](https://1scratch.vercel.app) · [Play on devnet](https://1scratch.vercel.app/play)**
+
 1Scratch turns a familiar scratch card into the start of a little portfolio. Pick Apple, Tesla, or Circle, buy a $1 card with devnet USDC, and scratch to reveal three tickers. Three matching tickers mean a winning card. Claim your prize as devnet stock tokens, then hold them in your wallet or sell them to the demo treasury.
 
 Built on Solana with **MagicBlock VRF** for the prize draw and **MagicBlock Ephemeral Rollups (ER)** for the scratch and reveal.
@@ -9,6 +11,8 @@ Built on Solana with **MagicBlock VRF** for the prize draw and **MagicBlock Ephe
 **Explore the working integration:** [Deployed game program](https://explorer.solana.com/address/CwvfeJmKV5cEJwrUU3M12C3d97vf7MyUoT6BnSCJNqCP?cluster=devnet) · [VRF request on ER](https://explorer.solana.com/tx/45U9ihPYjS4PyZTNBNwF5RBNdyiJsgkZCuyP2SgWxueUrhLkCdTEfLBLPp29tB2QwrtV5h4maMAWZSh1SzVKknMS?cluster=custom&customUrl=https%3A%2F%2Fdevnet-as.magicblock.app%2F) · [VRF callback on ER](https://explorer.solana.com/tx/2qry4Xuu5dZ6du3TunAP5hnSy1xy7XCGpseQ26BkiyrYsbG6U7DrVA7adPBdwX7d9jqxrZ1qnsah3MVCEF4HjdxE?cluster=custom&customUrl=https%3A%2F%2Fdevnet-as.magicblock.app%2F) · [Token payout on Solana](https://explorer.solana.com/tx/4Z25qV2jP7m2RbQZ5ECsBVi9EJacyMWcQ7LQZXNDKx796drqGy6tDjN5Z2bcAQ3UYqBebRYbHE4z2dokbWZRd3BS?cluster=devnet)
 
 > **Devnet edition:** the game uses devnet USDC and stock-themed devnet tokens. These tokens are not company shares.
+
+To play on the hosted app, connect a wallet funded with devnet SOL and the app's devnet USDC. The hosted faucet is disabled. Reference prices are maintained by a separately running keeper.
 
 ## A completed game you can check
 
