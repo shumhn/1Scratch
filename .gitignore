@@ -10,6 +10,7 @@ build/
 test-ledger/
 .yarn/
 .surfpool/
+.vercel/
 
 # Local environment and signing material
 .env*
@@ -33,3 +34,4 @@ artifacts/
 .claude/
 agent/
 skills-lock.json
+.vercel

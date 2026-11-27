@@ -28,6 +28,14 @@ See `app/.env.example`. `NEXT_PUBLIC_BASE_RPC` is browser-visible; `BASE_RPC` is
 
 The optional `FAUCET_KEYPAIR` is a server-only JSON secret key array for the configured devnet USDC mint authority. Supply it through a local ignored environment file or your host's secret store. Leaving it empty disables funding. Production funding is disabled unless `FAUCET_PUBLIC_ENABLED=1`. A public faucet also needs durable rate limits and a funding budget; a per-wallet balance check does not prevent new-wallet requests.
 
+### Host the frontend on Vercel
+
+Import this repository with **Root Directory `app`**, framework **Next.js**, and **Node.js 22.x**. Use `npm ci` to install and `npm run build` to build. The browser and server RPC defaults already point to MagicBlock's Solana devnet RPC; set `NEXT_PUBLIC_BASE_RPC` and `BASE_RPC` only to override them.
+
+Keep `FAUCET_PUBLIC_ENABLED=0` and leave `FAUCET_KEYPAIR` unset for the public deployment. Players need a wallet funded with devnet SOL and the app's devnet USDC. Local environment files and signing material are excluded from CLI uploads by `.vercelignore`.
+
+Vercel hosts the web app and its optional API route. Run the reference-price keeper separately as a persistent process; a frontend deployment does not host the keeper or redeploy the Solana program.
+
 ### Keep reference prices fresh
 
 The price keeper signs devnet price updates using the keeper authorized in the `House` account. It requests Jupiter mainnet token quotes, and uses the configured fallback prices if live sources are unavailable. Only the reference-price requests use mainnet; the keeper's transactions are sent to devnet.
