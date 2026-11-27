@@ -1,0 +1,26 @@
+{
+  "name": "stock-scratchers",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VRF scratch cards that pay prizes in tokenized stocks & Solana assets \u2014 MagicBlock ER + VRF",
+  "scripts": {
+    "build": "anchor build",
+    "setup:devnet": "tsx scripts/setup_devnet.ts",
+    "keeper": "tsx keeper/src/index.ts",
+    "e2e": "tsx scripts/e2e_scratch.ts",
+    "e2e:sell": "tsx scripts/e2e_sell.ts",
+    "test:sell-guard": "tsx scripts/verify_sell_slippage.ts",
+    "claim": "tsx scripts/claim_card.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@magicblock-labs/ephemeral-rollups-sdk": "0.18.0",
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
