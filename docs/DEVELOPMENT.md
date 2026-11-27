@@ -78,6 +78,8 @@ The sell script sells the wallet's entire balance of the specified devnet prize 
 npx tsx scripts/verify_receipt.ts <owner-address> <card-id> [er-rpc-url]
 ```
 
+For a completed game and the SDK integration points, see [MagicBlock integration and transaction proof](INTEGRATION.md).
+
 The app's **Verify this card** panel links the Solana buy/claim transactions and the MagicBlock ER scratch/callback/settlement transactions. It recomputes the payout using stored randomness and the saved prize table. This arithmetic check and the accepted callback transaction do not independently verify the oracle's cryptographic proof.
 
 ## Deployment and project structure
