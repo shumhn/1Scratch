@@ -2757,3 +2757,12 @@ html {
     scroll-padding-top: 76px;
   }
 }
+
+/* Keep navigation and recovery controls comfortable on touch screens. */
+.main-nav a {
+  min-height: 40px;
+}
+.inline-error button {
+  min-height: 40px;
+  padding-inline: 12px;
+}
