@@ -1,0 +1,35 @@
+# Dependencies and generated output
+node_modules/
+target/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+.anchor/
+test-ledger/
+.yarn/
+.surfpool/
+
+# Local environment and signing material
+.env*
+!.env.example
+!**/.env.example
+**/*keypair*.json
+**/id.json
+*.pem
+*.key
+keys/
+
+# Local tools, diagnostics, and design review artifacts
+.DS_Store
+*.log
+**/*.rs.bk
+backups/
+artifacts/
+*-demo.png
+*-preview.png
+.agents/
+.claude/
+agent/
+skills-lock.json

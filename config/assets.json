@@ -1,0 +1,128 @@
+{
+  "cluster": "devnet",
+  "_notes": [
+    "Prize asset registry for Stock Scratchers. We mint MOCK devnet SPL tokens for",
+    "each asset; the reference section tells the keeper where to get the REAL price.",
+    "xStock mints verified by unwindfi research (2026-07); crypto mints are canonical.",
+    "jupiter quotes 1 unit -> USDC on MAINNET via https://lite-api.jup.ag (no key).",
+    "fallback_price_usd is used when no live source answers (demo never breaks)."
+  ],
+  "card_price_usdc": 1,
+  "assets": [
+    {
+      "symbol": "AAPLx",
+      "kind": "stock",
+      "decimals": 8,
+      "reference": {
+        "source": "jupiter",
+        "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp"
+      },
+      "fallback_price_usd": 315.0,
+      "notes": "Apple via xStocks (mainnet mint via unwindfi registry, medium confidence)."
+    },
+    {
+      "symbol": "TSLAx",
+      "kind": "stock",
+      "decimals": 8,
+      "reference": {
+        "source": "jupiter",
+        "mint": "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB"
+      },
+      "fallback_price_usd": 350.0,
+      "notes": "Tesla via xStocks."
+    },
+    {
+      "symbol": "CRCLx",
+      "kind": "stock",
+      "decimals": 8,
+      "reference": {
+        "source": "jupiter",
+        "mint": "XsueG8BtpquVJX9LVLLEGuViXUungE6WmK5YZ3p3bd1"
+      },
+      "fallback_price_usd": 150.0,
+      "notes": "Circle via xStocks \u2014 the unwindfi flagship."
+    },
+    {
+      "symbol": "SOL",
+      "kind": "coin",
+      "decimals": 9,
+      "reference": {
+        "source": "jupiter",
+        "mint": "So11111111111111111111111111111111111111112"
+      },
+      "fallback_price_usd": 140.0,
+      "notes": "wSOL mint as the pricing reference."
+    },
+    {
+      "symbol": "BONK",
+      "kind": "coin",
+      "decimals": 5,
+      "reference": {
+        "source": "jupiter",
+        "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+      },
+      "fallback_price_usd": 2e-05,
+      "notes": "Memecoin tier \u2014 cheap unit, fun huge token counts on wins."
+    },
+    {
+      "symbol": "WIF",
+      "kind": "coin",
+      "decimals": 6,
+      "reference": {
+        "source": "jupiter",
+        "mint": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm"
+      },
+      "fallback_price_usd": 1.2,
+      "notes": "dogwifhat."
+    },
+    {
+      "symbol": "JUP",
+      "kind": "coin",
+      "decimals": 6,
+      "reference": {
+        "source": "jupiter",
+        "mint": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"
+      },
+      "fallback_price_usd": 0.5,
+      "notes": "Jupiter governance token."
+    }
+  ],
+  "prize_table": [
+    {
+      "multiplier_bps": 0,
+      "weight_ppm": 6200000,
+      "label": "blank"
+    },
+    {
+      "multiplier_bps": 10000,
+      "weight_ppm": 3000000,
+      "label": "money back (1x)"
+    },
+    {
+      "multiplier_bps": 20000,
+      "weight_ppm": 500000,
+      "label": "2x"
+    },
+    {
+      "multiplier_bps": 50000,
+      "weight_ppm": 200000,
+      "label": "5x"
+    },
+    {
+      "multiplier_bps": 100000,
+      "weight_ppm": 90000,
+      "label": "10x"
+    },
+    {
+      "multiplier_bps": 1000000,
+      "weight_ppm": 9900,
+      "label": "100x"
+    },
+    {
+      "multiplier_bps": 10000000,
+      "weight_ppm": 100,
+      "label": "1000x JACKPOT"
+    }
+  ],
+  "_prize_math": "Weights sum to 10_000_000. Expected payout multiple = 0.30 + 0.10 + 0.10 + 0.09 + 0.099 + 0.01 = 0.699, or 69.9% theoretical RTP before fees. Win chance is 38%. The table is an on-chain config."
+}
