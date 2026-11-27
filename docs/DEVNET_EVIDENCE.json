@@ -1,0 +1,89 @@
+{
+  "checkedAtUtc": "2026-11-27T12:42:26Z",
+  "network": "Solana devnet",
+  "baseRpc": "https://rpc.magicblock.app/devnet",
+  "erRpc": "https://devnet-as.magicblock.app/",
+  "program": "CwvfeJmKV5cEJwrUU3M12C3d97vf7MyUoT6BnSCJNqCP",
+  "programExecutable": true,
+  "house": "6ueXccthuD73jY93851FVTztKBPAyv8UxwTzit9UKNc9",
+  "vrfProgram": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz",
+  "owner": "2QrwExUdu93o8mSdfEh6kvbNLTbN1UnVRrfyjQsDSUPE",
+  "entryUsdcRaw": "1000000",
+  "activeTiers": [
+    {
+      "multiplierBps": 0,
+      "weight": 6200000
+    },
+    {
+      "multiplierBps": 10000,
+      "weight": 3000000
+    },
+    {
+      "multiplierBps": 20000,
+      "weight": 500000
+    },
+    {
+      "multiplierBps": 50000,
+      "weight": 200000
+    },
+    {
+      "multiplierBps": 100000,
+      "weight": 90000
+    },
+    {
+      "multiplierBps": 1000000,
+      "weight": 9900
+    },
+    {
+      "multiplierBps": 10000000,
+      "weight": 100
+    }
+  ],
+  "totalWeight": 10000000,
+  "examples": [
+    {
+      "cardId": 12,
+      "card": "DnkEaLJRMB2vjVk2PJfVdRocdJTZqHoTN8hKyGuXxbCw",
+      "ticker": "TSLAx",
+      "state": "claimed",
+      "roll": 6652245,
+      "multiplierBps": 10000,
+      "prizeUsdE6": "1000000",
+      "mathMatches": true,
+      "buySignature": "53UANEKHo88VbJ9FnYNNW4SMfAp89cqt6ScZj9GfpHcAuDQBregASRFoTjaVwpeS24h1HjdVWXYubo39PCoaUK8X",
+      "scratchSignature": "45U9ihPYjS4PyZTNBNwF5RBNdyiJsgkZCuyP2SgWxueUrhLkCdTEfLBLPp29tB2QwrtV5h4maMAWZSh1SzVKknMS",
+      "callbackSignature": "2qry4Xuu5dZ6du3TunAP5hnSy1xy7XCGpseQ26BkiyrYsbG6U7DrVA7adPBdwX7d9jqxrZ1qnsah3MVCEF4HjdxE",
+      "settlementSignature": "Nfbsie1wBnwUNmskNw3eTVE5aBcj6Y3KrQmLwm1Kn4r1ytLn1kcLMBfhGPofaiKLbQ8dTSquiTU2WCWLWsZiESa",
+      "claimSignature": "4Z25qV2jP7m2RbQZ5ECsBVi9EJacyMWcQ7LQZXNDKx796drqGy6tDjN5Z2bcAQ3UYqBebRYbHE4z2dokbWZRd3BS",
+      "claimBlockTime": 1795770897,
+      "claimedTokenBalanceBeforeRaw": "0",
+      "claimedTokenBalanceAfterRaw": "256352",
+      "tokenDecimals": 8,
+      "requestInvokesMagicBlockVrf": true,
+      "callbackInvokesGameProgram": true,
+      "sale": {
+        "signature": "nLUzxgmnGQMYUnM5R6csQsuc3uH4XtHPMkEAdPhGMoLZpHniRFTcJ4JB3T78N6uux85qc224hB7YyyNCgZgRJUM",
+        "blockTime": 1795770904,
+        "soldTokenRaw": "256352",
+        "receivedUsdcRaw": "999998",
+        "usdcDecimals": 6
+      }
+    },
+    {
+      "cardId": 11,
+      "card": "9JdZ5pWxFahQsk1GEiDbjV3FrJmy7xQ4jParLCzK8Ewp",
+      "ticker": "TSLAx",
+      "state": "claimed",
+      "roll": 9278770,
+      "multiplierBps": 20000,
+      "prizeUsdE6": "2000000",
+      "mathMatches": true,
+      "buySignature": "3LtF79v4bgPLZRf6mYMDzcK9Kqofagg98E38HYH9QS267U7XcP9DdztzuzpmCdgjaAGhkf1ymfGsjepmxh1Qb4BN",
+      "scratchSignature": "Ds6TKddaTqpskdTYyMH9BiZ4EEaxjL88kpLKmyS3eFaPN91YfL4BwqmJZXTp1ihR46V6yNreESJ2VwuNTrRC2EK",
+      "callbackSignature": "5diYtoDJZurTtknxdZdYqJBQHpK1MNVcP5CukGPN4oqfHbzAoe6jQrnLtq5oxCGVJF9BroDGTBidFt3MQQnUSkqZ",
+      "settlementSignature": "4XSbnKtsGi4mj6mFSviRbSai9KztjxdLqXK9vD9WcjcQ2vTB3tmko37SaVNLu3RGbAg7Z3fQj5c1TuGVcjswfZJV",
+      "claimSignature": "2Qr5iudLwfvFNsYY5BJy21WGuRrgjXNzkjvVpPVZc1o87FpQPdP9RMxWHki5E95W5vtpnK2Tb9u7Kydw7XbojwAu"
+    }
+  ],
+  "verificationScope": "Read-only account and transaction-history queries, successful program instruction logs, token-balance changes, and payout recomputation from stored randomness and saved tiers. This is not an independent cryptographic verification of the oracle proof."
+}
