@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "./studio.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
 import BrandMark from "@/components/BrandMark";
@@ -25,7 +26,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "1Scratch — Scratch. Match. Own.",
   description:
-    "MagicBlock VRF scratch cards with devnet stock tokens valued using keeper reference prices.",
+    "The stock scratcher on Solana. Scratch, match three tickers, and claim devnet stock tokens. Powered by MagicBlock VRF and Ephemeral Rollups.",
 };
 
 export default function RootLayout({

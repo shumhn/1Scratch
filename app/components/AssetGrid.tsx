@@ -6,7 +6,7 @@ import { useConnection, useWallet } from "./Providers";
 import { ASSETS } from "@/lib/consts";
 import { getProgram } from "@/lib/program";
 import { buyAndDelegate, LiveCard } from "@/lib/game";
-import { fmtPrice, relativeTime } from "@/lib/format";
+import { fmtPrice, fmtUSD, relativeTime } from "@/lib/format";
 import { useHouse } from "@/lib/house";
 import TicketArtwork from "./TicketArtwork";
 import { StockIdentity, STOCK_NAMES } from "./StockIdentity";
@@ -74,6 +74,9 @@ export default function AssetGrid({
     )
       setSelectedSymbol(requested);
   }, []);
+  const selectedPrice = prices[selectedSymbol];
+  const priceStale =
+    !!selectedPrice && Date.now() / 1000 - selectedPrice.updatedAt > 3600;
   const chooseStock = (symbol: string) => {
     setSelectedSymbol(symbol);
     const url = new URL(window.location.href);
@@ -90,8 +93,12 @@ export default function AssetGrid({
     if (!wallet.publicKey) {
       try {
         await wallet.connect();
-      } catch {
-        setError("Wallet connection was not completed. Try again.");
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Wallet connection was not completed. Try again.",
+        );
       }
       return;
     }
@@ -115,9 +122,9 @@ export default function AssetGrid({
     <div className="scratch-desk surface">
       <div className="desk-config">
         <p className="eyebrow">01 / CHOOSE YOUR TICKER</p>
-        <h2>What’s your next stock?</h2>
+        <h2>Make it your stock.</h2>
         <p className="config-description">
-          Same price. Same odds. Your choice of prize.
+          Choose the ticker you’ll receive if your card wins.
         </p>
         <div
           className="stock-options"
@@ -154,7 +161,7 @@ export default function AssetGrid({
         <div className="purchase-summary">
           <span>One sealed card</span>
           <strong>
-            {cardPrice == null ? "—" : `$${cardPrice.toLocaleString()}`}{" "}
+            {cardPrice == null ? "—" : fmtUSD(cardPrice)}{" "}
             <small>devnet USDC</small>
           </strong>
         </div>
@@ -194,6 +201,9 @@ export default function AssetGrid({
           <br />
           Your wallet confirms every transaction.
         </p>
+        <a href="#odds" className="purchase-odds-link">
+          View the prize odds <ArrowUpRight size={13} aria-hidden="true" />
+        </a>
       </div>
       <div className="desk-ticket-panel">
         <div className="desk-ticket-label">
@@ -218,14 +228,20 @@ export default function AssetGrid({
           <span>MagicBlock VRF · Public prize table</span>
         </div>
       </div>
-      <div className="desk-price-note">
+      <div
+        className={"desk-price-note" + (priceStale ? " price-is-stale" : "")}
+      >
         <span className="status-dot" />
-        Keeper reference prices
+        {priceStale
+          ? "Reference prices need an update"
+          : "Keeper reference prices"}
         {prices[selectedSymbol]
           ? ` · updated ${relativeTime(prices[selectedSymbol].updatedAt)}`
           : " · loading from devnet"}
         <span>
-          Reference prices value your token payout. Entry cost stays the same.
+          {priceStale
+            ? "Claiming or selling requires a fresh reference price."
+            : "Reference prices value your payout. Card entry stays the same."}
         </span>
       </div>
     </div>

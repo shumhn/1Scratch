@@ -2,231 +2,319 @@
 
 import Link from "next/link";
 import {
+  ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  Fingerprint,
+  Check,
   ShieldCheck,
-  Wallet,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import TicketArtwork from "@/components/TicketArtwork";
 import PrizeTable from "@/components/PrizeTable";
 import { useAssetPrices } from "@/components/AssetGrid";
 import { StockIdentity, STOCK_NAMES } from "@/components/StockIdentity";
 import { useHouse } from "@/lib/house";
-import { fmtPrice } from "@/lib/format";
+import { fmtPrice, fmtUSD } from "@/lib/format";
+
+/*
+ * LANDING STORYBOARD
+ *   0ms  Header, headline and primary CTA stay visible and interactive.
+ *  80ms  Product illustration settles into its display.
+ * 180ms  Secondary product annotation fades in.
+ * Remaining sections stay visible; no scroll-triggered reading delays.
+ */
+const TIMING = { illustration: 80, annotation: 180 };
 
 export default function Home() {
   const prices = useAssetPrices();
   const { cardPrice, winChance, maxMultiplier } = useHouse();
+  const [stage, setStage] = useState(0);
   useEffect(() => {
     const url = new URL(window.location.href);
     if (url.searchParams.has("replay") || url.searchParams.has("replayOwner")) {
       url.searchParams.delete("replay");
       url.searchParams.delete("replayOwner");
-      window.history.replaceState(
-        {},
-        "",
-        `${url.pathname}${url.search}${url.hash}`,
-      );
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
     }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStage(2);
+      return;
+    }
+    const first = setTimeout(() => setStage(1), TIMING.illustration);
+    const second = setTimeout(() => setStage(2), TIMING.annotation);
+    return () => {
+      clearTimeout(first);
+      clearTimeout(second);
+    };
   }, []);
   return (
-    <>
-      <section className="landing-hero">
-        <div className="hero-grid page-container">
-          <div className="hero-copy">
-            <p className="eyebrow flex items-center gap-2">
-              <span className="status-dot" />
-              THE MARKET. WITH A LITTLE LUCK.
-            </p>
-            <h1>
-              A little scratch.
-              <br />A stock of
-              <br />
-              <span>your own.</span>
-            </h1>
-            <p className="hero-description">
-              Three matching tickers. One winning moment.
-              <br className="hidden sm:block" /> Scratch for a piece of Apple,
-              Tesla, or Circle.
-            </p>
-            <div className="hero-actions">
-              <Link href="/play" className="button-primary hero-cta">
-                Play a scratcher{" "}
-                <span>
-                  <ArrowUpRight size={21} />
-                </span>
-              </Link>
-              <a className="text-link" href="#how-it-works">
-                How it works <ArrowRight size={16} />
-              </a>
-            </div>
-            <p className="hero-caption">
-              <ShieldCheck size={14} aria-hidden="true" />
-              MagicBlock VRF <span>·</span> Public odds <span>·</span> Devnet
-              edition
-            </p>
+    <div className="studio-home" data-stage={stage}>
+      <section className="studio-hero">
+        <div className="studio-hero-light" aria-hidden="true" />
+        <div className="page-container studio-hero-inner">
+          <div className="studio-hero-top">
+            <span>THE STOCK SCRATCHER</span>
+            <span>
+              BUILT ON SOLANA <span className="status-dot" />
+            </span>
           </div>
-          <TicketArtwork />
-        </div>
-        <div className="hero-bottom page-container">
-          <p>
-            NOT ANOTHER SPIN.
-            <br />
-            <span>A PIECE OF SOMETHING.</span>
-          </p>
-          <a href="#stocks" className="text-link">
-            Explore the tickers <span>↓</span>
-          </a>
+          <div className="studio-hero-layout">
+            <div className="studio-hero-copy">
+              <p className="studio-kicker">
+                <span className="kicker-line" />A LITTLE LUCK. A NEW HOLDING.
+              </p>
+              <h1>
+                Scratch your
+                <br />
+                <span>next stock.</span>
+                <span className="hero-period" aria-hidden="true">
+                  ↗
+                </span>
+              </h1>
+              <p className="studio-lede">
+                Three matching tickers. One winning moment.
+                <br />
+                Win devnet stock tokens. Yours to hold or sell.
+              </p>
+              <div className="studio-actions">
+                <Link href="/play" className="studio-cta">
+                  <span>Play a stock scratcher</span>
+                  <span className="cta-arrow">
+                    <ArrowUpRight size={22} aria-hidden="true" />
+                  </span>
+                </Link>
+                <a href="#how-it-works" className="studio-secondary">
+                  How it works <ArrowRight size={15} aria-hidden="true" />
+                </a>
+              </div>
+              <div className="hero-entry-note">
+                <span className="font-mono tnum">
+                  {cardPrice == null ? "—" : fmtUSD(cardPrice)}
+                </span>
+                <span>per card · devnet USDC</span>
+                <span className="hero-note-divider" />
+                <ShieldCheck size={14} aria-hidden="true" />
+                <span>MagicBlock VRF</span>
+              </div>
+            </div>
+            <div className="studio-hero-art">
+              <TicketArtwork />
+              <span className="hero-art-index">01 — THE STOCK EDITION</span>
+            </div>
+          </div>
+          <div className="studio-hero-bottom">
+            <span>
+              <ShieldCheck size={14} aria-hidden="true" />
+              PUBLIC ODDS. VERIFIABLE RESULTS.
+            </span>
+            <a href="#stocks">
+              MEET YOUR NEXT TICKER <ArrowDown size={15} aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </section>
-      <div className="market-ribbon" id="stocks">
-        <div className="page-container ribbon-inner">
-          <span className="ribbon-label">
-            YOUR NEXT
-            <br />
-            WIN COULD BE
-          </span>
-          {Object.keys(STOCK_NAMES).map((symbol) => (
+
+      <section
+        className="ticker-section page-container"
+        id="stocks"
+        aria-label="Available stock scratchers"
+      >
+        <div className="ticker-section-intro">
+          <span className="eyebrow">PICK YOUR POSSIBILITY</span>
+          <p>
+            The ticker is your choice. <br />
+            The luck is on-chain.
+          </p>
+        </div>
+        <div className="ticker-list">
+          {Object.keys(STOCK_NAMES).map((symbol, index) => (
             <Link
-              className="ribbon-stock"
+              className="ticker-card"
               key={symbol}
-              href={`/play?ticker=${symbol}`}
-              aria-label={`Play for ${STOCK_NAMES[symbol]} ${symbol}`}
+              href={"/play?ticker=" + symbol}
             >
-              <StockIdentity symbol={symbol} />
-              <div>
-                <span>
-                  {STOCK_NAMES[symbol]} <small>{symbol}</small>
-                </span>
-                <p>
+              <div className="ticker-card-top">
+                <StockIdentity symbol={symbol} />
+                <span className="ticker-ordinal">0{index + 1}</span>
+              </div>
+              <div className="ticker-card-name">
+                <strong>{STOCK_NAMES[symbol]}</strong>
+                <span>{symbol}</span>
+              </div>
+              <div className="ticker-card-bottom">
+                <span
+                  className="ticker-price font-mono tnum"
+                  aria-label={
+                    prices[symbol]
+                      ? prices[symbol].priceUsd.toLocaleString("en-US", {
+                          maximumFractionDigits: 12,
+                        }) + " US dollars reference price"
+                      : "Loading reference price"
+                  }
+                >
                   {prices[symbol] ? (
                     fmtPrice(prices[symbol].priceUsd)
                   ) : (
-                    <span className="skeleton inline-block h-4 w-16" />
+                    <span className="skeleton inline-block h-4 w-20" />
                   )}
-                  <small>reference price</small>
-                </p>
+                  <small>REFERENCE PRICE</small>
+                </span>
+                <span className="ticker-open">
+                  <ArrowUpRight size={19} aria-hidden="true" />
+                </span>
               </div>
-              <ArrowUpRight
-                className="ribbon-stock-arrow"
-                size={16}
-                aria-hidden="true"
-              />
             </Link>
           ))}
-          <Link
-            href="/play"
-            className="ribbon-link"
-            aria-label="Play a stock scratcher"
-          >
-            <ArrowUpRight size={22} />
-          </Link>
         </div>
-      </div>
+      </section>
+
       <div className="page-container">
-        <section className="landing-metrics" aria-label="Game information">
+        <section className="ownership-section">
+          <div id="how-it-works" className="ownership-copy scroll-mt-28">
+            <p className="eyebrow">FROM SCRATCH TO STOCK</p>
+            <h2>
+              Three matches.
+              <br />
+              <span>A new holding.</span>
+            </h2>
+            <p>
+              The reveal is just the beginning. A winning card puts devnet stock
+              tokens in your wallet.
+            </p>
+            <div
+              className="ownership-match"
+              aria-label="Illustrative winning pattern: three AAPLx tickers"
+            >
+              {[0, 1, 2].map((i) => (
+                <span key={i}>
+                  <StockIdentity symbol="AAPLx" />
+                  <strong>AAPLx</strong>
+                </span>
+              ))}
+              <span className="match-check">
+                <Check size={19} aria-hidden="true" />
+              </span>
+            </div>
+            <small>EXAMPLE WINNING PATTERN</small>
+          </div>
+          <div className="ownership-steps">
+            <div className="ownership-step">
+              <span>01</span>
+              <div>
+                <h3>Pick a stock. Scratch the foil.</h3>
+                <p>
+                  Choose your ticker, buy a card, and reveal three symbols.
+                  Every ticker has the same entry price and odds.
+                </p>
+              </div>
+            </div>
+            <div className="ownership-step">
+              <span>02</span>
+              <div>
+                <h3>Match three. Meet your prize.</h3>
+                <p>
+                  MagicBlock VRF draws from the public prize table. Winning
+                  cards reveal three matching tickers.
+                </p>
+              </div>
+            </div>
+            <div className="ownership-step">
+              <span>03</span>
+              <div>
+                <h3>Claim it. Keep it. Or sell it.</h3>
+                <p>
+                  Your prize becomes wallet-held devnet tokens. Even a
+                  money-back win has a reference value that can move after you
+                  claim.
+                </p>
+                <Link href="/play#portfolio" className="text-link">
+                  Explore your portfolio{" "}
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="studio-stats"
+          aria-label="On-chain game information"
+        >
           <div>
-            <span>ONE CARD</span>
-            <strong>
-              {cardPrice == null ? "—" : `$${cardPrice.toLocaleString()}`}
+            <span>CARD ENTRY</span>
+            <strong className="font-mono tnum">
+              {cardPrice == null ? "—" : fmtUSD(cardPrice)}
             </strong>
-            <p>Entry in devnet USDC</p>
+            <p>Paid in devnet USDC</p>
           </div>
           <div>
-            <span>MATCH THREE</span>
-            <strong>
-              {winChance == null ? "—" : `${winChance.toLocaleString()}%`}
+            <span>MATCH-THREE CHANCE</span>
+            <strong className="font-mono tnum">
+              {winChance == null
+                ? "—"
+                : winChance.toLocaleString("en-US", {
+                    maximumFractionDigits: 2,
+                  }) + "%"}
             </strong>
-            <p>Chance of a winning card</p>
+            <p>Includes money-back wins</p>
           </div>
           <div>
-            <span>MAKE IT A BIG ONE</span>
-            <strong>
+            <span>THE HIGHEST TIER</span>
+            <strong className="font-mono tnum">
               {maxMultiplier == null
                 ? "—"
-                : `${maxMultiplier.toLocaleString()}×`}
+                : maxMultiplier.toLocaleString("en-US") + "×"}
             </strong>
-            <p>Highest prize in the table</p>
+            <p>A rare possibility, on every card</p>
           </div>
-        </section>
-        <section id="how-it-works" className="section-block scroll-mt-28">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">FROM SCRATCH TO STOCK</p>
-              <h2>
-                A familiar game.
-                <br />A different kind of prize.
-              </h2>
-            </div>
-            <p className="section-description">
-              The thrill lasts a moment.
+          <Link href="/play" className="stats-link">
+            <span>
+              YOUR NEXT
               <br />
-              The tokens are yours to hold.
+              STOCK STARTS HERE
+            </span>
+            <ArrowUpRight size={26} aria-hidden="true" />
+          </Link>
+        </section>
+
+        <PrizeTable />
+
+        <section className="trust-strip">
+          <ShieldCheck size={22} strokeWidth={1.3} aria-hidden="true" />
+          <div>
+            <h3>Luck you can look into.</h3>
+            <p>
+              MagicBlock VRF draws the prize. Ephemeral Rollups run the scratch.
+              Solana records your token payout.
             </p>
           </div>
-          <div className="how-grid">
-            <div className="how-item">
-              <span className="step-number">01</span>
-              <Fingerprint size={27} aria-hidden="true" />
-              <h3>Pick. Scratch. Reveal.</h3>
-              <p>
-                Choose your ticker and buy a card. Scratch away the foil to
-                reveal three symbols.
-              </p>
-              <div className="rule-tickers" aria-hidden="true">
-                {Object.keys(STOCK_NAMES).map((symbol) => (
-                  <span key={symbol}>
-                    <StockIdentity symbol={symbol} />
-                    {symbol}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="how-item">
-              <span className="step-number">02</span>
-              <ShieldCheck size={27} aria-hidden="true" />
-              <h3>Three of a kind wins.</h3>
-              <p>
-                MagicBlock VRF draws from the public prize table. Winning cards
-                reveal three matching tickers.
-              </p>
-              <div className="rule-match" aria-label="Example winning pattern">
-                <span>AAPLx</span>
-                <span>AAPLx</span>
-                <span>AAPLx</span>
-                <ShieldCheck size={18} />
-              </div>
-            </div>
-            <div className="how-item">
-              <span className="step-number">03</span>
-              <Wallet size={27} aria-hidden="true" />
-              <h3>Your win. Your wallet.</h3>
-              <p>
-                Claim devnet stock tokens. Hold as their reference value moves,
-                or sell to the demo treasury.
-              </p>
-              <Link className="rule-portfolio-link" href="/play#portfolio">
-                Your win belongs in your wallet <ArrowUpRight size={15} />
-              </Link>
-            </div>
-          </div>
+          <a
+            className="text-link"
+            href="https://github.com/shumhn/1Scratch/blob/main/docs/INTEGRATION.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Follow the transactions{" "}
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </a>
         </section>
-        <PrizeTable />
-        <section className="closing-cta">
-          <p className="eyebrow">THREE SYMBOLS. A NEW POSSIBILITY.</p>
+
+        <section className="studio-closing">
+          <span className="eyebrow">ONE CARD. A NEW POSSIBILITY.</span>
           <h2>
-            Your next stock
+            A little luck
             <br />
-            starts with a scratch.
+            looks good on you.
           </h2>
-          <Link className="button-primary" href="/play">
-            Let’s play <ArrowUpRight size={19} />
+          <Link href="/play" className="studio-cta">
+            <span>Find your next stock</span>
+            <span className="cta-arrow">
+              <ArrowUpRight size={22} aria-hidden="true" />
+            </span>
           </Link>
-          <span>Devnet tokens. No company shares.</span>
+          <p>Devnet edition · Tokens are not company shares.</p>
         </section>
       </div>
-    </>
+    </div>
   );
 }

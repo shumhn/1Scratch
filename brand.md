@@ -16,17 +16,17 @@ Use real account data for prices, entry cost, prize tiers, match chance, portfol
 
 All colors are defined in `app/app/globals.css`.
 
-| Token | HSL | Role |
-|---|---|---|
-| background | 40 8% 5% | warm near-black page |
-| foreground | 40 20% 94% | soft white text |
-| card | 40 5% 9% | financial panels |
-| popover | 40 4% 12% | elevated surfaces |
-| muted | 40 4% 16% | inputs and loading placeholders |
-| muted-foreground | 40 5% 64% | secondary text |
-| border | 40 5% 18% | panel dividers |
-| primary | 44 81% 65% | gold, primary actions and prizes |
-| primary-foreground | 40 30% 9% | text on gold |
+| Token              | HSL        | Role                             |
+| ------------------ | ---------- | -------------------------------- |
+| background         | 40 8% 5%   | warm near-black page             |
+| foreground         | 40 20% 94% | soft white text                  |
+| card               | 40 5% 9%   | financial panels                 |
+| popover            | 40 4% 12%  | elevated surfaces                |
+| muted              | 40 4% 16%  | inputs and loading placeholders  |
+| muted-foreground   | 40 5% 64%  | secondary text                   |
+| border             | 40 5% 18%  | panel dividers                   |
+| primary            | 44 81% 65% | gold, primary actions and prizes |
+| primary-foreground | 40 30% 9%  | text on gold                     |
 
 Gold-light, gold-mid, and gold-deep form the illustrated ticket's material. Brand colors on the stock identity marks are contextual, not competing action colors. Success uses `prize-nice`. Focus rings use `ring`.
 
@@ -46,3 +46,11 @@ Concise and welcoming: “A little scratch. A stock of your own.” Explain the 
 ## Interaction requirements
 
 Real links and buttons, global visible keyboard focus, clear selected ticker state, inline errors and recovery, wallet confirmation for transactions. The scratch dialog traps focus and returns it when closed. No replay card automatically opens on the landing page.
+
+## Stock edition refinement
+
+The second UI pass uses a landscape ticket with engraved graphite, a champagne foil strip, and a gold backing card. Its sealed illustration has no preassigned result. The landing headline is “Scratch your next stock.” with a spacious product display; the game desk places the ticket stage beside a compact purchase panel. On mobile, purchase controls precede the decorative stage.
+
+The public prize table is an accessible ledger beside a maximum-prize panel. All odds, entry costs, reference prices, and maximum tiers come from chain reads. Stale reference prices are called out because they affect claims and sales. Missing wallet extensions produce an actionable notice with installation links.
+
+The refinement is implemented in `app/app/studio.css`. It keeps the existing warm graphite and gold palette and the Inter / Instrument Sans / JetBrains Mono font system. Primary actions have one clear visual weight, number displays use tabular figures, and page entrance / pointer tilt respects reduced motion. Navigation and the primary CTA are immediately available during entrance motion.

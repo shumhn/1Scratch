@@ -22,7 +22,10 @@ export interface WalletCtxValue {
   connect: (name?: string) => Promise<void>;
   disconnect: () => Promise<void>;
   /** Adapter-compatible: sign + send (caller confirms). */
-  sendTransaction: (tx: Transaction, connection?: Connection) => Promise<string>;
+  sendTransaction: (
+    tx: Transaction,
+    connection?: Connection,
+  ) => Promise<string>;
   signTransaction: (tx: Transaction) => Promise<Transaction>;
   signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>;
 }
@@ -50,11 +53,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const connect = useCallback(async (name?: string) => {
     const wallets = detectWallets();
     if (wallets.length === 0) {
-      window.open("https://phantom.com/", "_blank");
-      return;
+      throw new Error(
+        "No wallet detected. Open 1Scratch in a browser with Phantom or Solflare installed.",
+      );
     }
     const chosen = name
-      ? wallets.find((w) => w.name === name) ?? wallets[0]
+      ? (wallets.find((w) => w.name === name) ?? wallets[0])
       : wallets[0];
     setConnecting(true);
     try {
@@ -131,7 +135,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         return injected.provider.signAllTransactions(txs);
       },
     }),
-    [publicKey, walletName, connecting, connect, disconnect, injected]
+    [publicKey, walletName, connecting, connect, disconnect, injected],
   );
 
   return (

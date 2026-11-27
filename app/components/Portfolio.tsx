@@ -109,7 +109,7 @@ export default function Portfolio({ refreshKey }: { refreshKey: number }) {
       <div className="portfolio-heading">
         <div>
           <p className="eyebrow mb-2">FROM A LITTLE LUCK TO YOUR WALLET</p>
-          <h2>Your little portfolio.</h2>
+          <h2>Your holdings.</h2>
           <p>Hold your winnings, or sell to the devnet treasury.</p>
         </div>
         <div className="portfolio-total tnum">
@@ -120,7 +120,7 @@ export default function Portfolio({ refreshKey }: { refreshKey: number }) {
       {!publicKey ? (
         <div className="surface portfolio-empty">
           <Wallet size={28} strokeWidth={1.2} />
-          <h3>Your next chapter starts here.</h3>
+          <h3>Your wins belong here.</h3>
           <p>
             Connect your wallet to see your devnet stock tokens and their
             reference value.
@@ -135,7 +135,7 @@ export default function Portfolio({ refreshKey }: { refreshKey: number }) {
       ) : holdings.length === 0 ? (
         <div className="surface portfolio-empty">
           <Wallet size={28} strokeWidth={1.2} />
-          <h3>A blank page. Full of possibility.</h3>
+          <h3>Your first holding starts with a match.</h3>
           <p>Claim a winning card and your tokens will appear here.</p>
           <a href="#scratch" className="button-secondary">
             Choose a scratcher <ArrowUpRight size={16} />

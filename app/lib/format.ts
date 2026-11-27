@@ -4,9 +4,11 @@ const SUBS = ["₀", "₁", "₂", "₃", "₄", "₅", "₆", "₇", "₈", "�
 
 /** USD price with sensible precision; tiny prices get crypto subscript zeros ($0.0₅2). */
 export function fmtPrice(n: number): string {
-  if (n <= 0) return "$0";
+  if (!Number.isFinite(n)) return "—";
+  if (n < 0) return "-" + fmtPrice(-n);
+  if (n === 0) return "$0.00";
   if (n >= 1)
-    return `$${n.toLocaleString(undefined, {
+    return `$${n.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -25,20 +27,46 @@ export function fmtPrice(n: number): string {
   return `$0.0${sub}${sig}`;
 }
 
-export function fmtUSD(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
-  if (n >= 1) return `$${n.toFixed(2)}`;
-  return fmtPrice(n);
+export function fmtUSD(n: number, compact = true): string {
+  if (!Number.isFinite(n)) return "—";
+  if (n < 0) return "-" + fmtUSD(-n, compact);
+  if (n === 0) return "$0.00";
+  if (n < 0.01) return "<$0.01";
+  if (compact) {
+    for (const [threshold, suffix] of [
+      [1e12, "T"],
+      [1e9, "B"],
+      [1e6, "M"],
+      [1e3, "K"],
+    ] as const) {
+      if (n >= threshold)
+        return (
+          "$" +
+          (n / threshold).toLocaleString("en-US", {
+            maximumFractionDigits: 1,
+          }) +
+          suffix
+        );
+    }
+  }
+  return (
+    "$" +
+    n.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
 }
 
 /** Token amounts — compact for huge memecoin wins, precise for small ones. */
 export function fmtAmount(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  if (Object.is(n, -0)) n = 0;
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 10_000) return `${(n / 1_000).toFixed(1)}k`;
-  if (n >= 1) return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
-  return n.toLocaleString(undefined, { maximumSignificantDigits: 4 });
+  if (n >= 1) return n.toLocaleString("en-US", { maximumFractionDigits: 4 });
+  return n.toLocaleString("en-US", { maximumSignificantDigits: 4 });
 }
 
 /** ppm weight → percentage label, e.g. 3_000_000 → "30%", 9_900 → "0.099%". */

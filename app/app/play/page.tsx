@@ -9,6 +9,7 @@ import PrizeTable from "@/components/PrizeTable";
 import { useConnection, useWallet } from "@/components/Providers";
 import { LiveCard, loadCard } from "@/lib/game";
 import { useHouse } from "@/lib/house";
+import { fmtUSD } from "@/lib/format";
 
 export default function Play() {
   const { connection } = useConnection();
@@ -27,7 +28,7 @@ export default function Play() {
       <div className="play-heading">
         <div>
           <p className="eyebrow">THE SCRATCH DESK</p>
-          <h1>A little luck looks good on you.</h1>
+          <h1>Find your next stock.</h1>
           <p>Choose a ticker. Reveal three symbols. Claim what’s yours.</p>
         </div>
         <span className="network-status">
@@ -39,7 +40,7 @@ export default function Play() {
         <div>
           <span>Card entry</span>
           <strong>
-            {cardPrice == null ? "—" : `$${cardPrice.toLocaleString()}`}{" "}
+            {cardPrice == null ? "—" : fmtUSD(cardPrice)}{" "}
             <small>devnet USDC</small>
           </strong>
         </div>

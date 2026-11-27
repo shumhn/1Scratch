@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useWallet } from "./Providers";
 import { detectWallets } from "@/lib/wallet";
+import { X } from "lucide-react";
 
 export default function ConnectButton() {
   const { publicKey, walletName, connecting, connect, disconnect } =
@@ -11,12 +12,18 @@ export default function ConnectButton() {
   const [error, setError] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open && !error) return;
     const outside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
+      if (!root.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setError(null);
+      }
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        setError(null);
+      }
     };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
@@ -24,14 +31,18 @@ export default function ConnectButton() {
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("keydown", escape);
     };
-  }, [open]);
+  }, [open, error]);
   const connectWallet = async (name?: string) => {
     setError(null);
     try {
       await connect(name);
       setOpen(false);
-    } catch {
-      setError("Connection not completed. Try again.");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Connection not completed. Try again.",
+      );
     }
   };
 
@@ -97,12 +108,28 @@ export default function ConnectButton() {
         </div>
       )}
       {error && (
-        <p
-          className="absolute right-0 top-full mt-2 w-60 rounded-lg border border-border bg-card p-3 text-xs text-red-400"
-          role="alert"
-        >
-          {error}
-        </p>
+        <div className="wallet-notice" role="alert">
+          <div className="wallet-notice-heading">
+            <strong>Connect a wallet</strong>
+            <button
+              onClick={() => setError(null)}
+              aria-label="Dismiss wallet message"
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
+          </div>
+          <p>{error}</p>
+          {wallets.length === 0 && (
+            <div className="wallet-install-links">
+              <a href="https://phantom.com/" target="_blank" rel="noreferrer">
+                Get Phantom ↗
+              </a>
+              <a href="https://solflare.com/" target="_blank" rel="noreferrer">
+                Get Solflare ↗
+              </a>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
