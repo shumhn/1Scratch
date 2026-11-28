@@ -18,7 +18,9 @@ import { ShieldCheck, X } from "lucide-react";
 
 const FOIL_W = 400;
 const FOIL_H = 360;
-const REVEAL_PCT = 0.55;
+const REVEAL_PCT = 0.45;
+const CENTER_REVEAL_PCT = 0.4;
+const BRUSH_SIZE = 42;
 const CARD_CSS_WIDTH = "100%";
 
 function tierStyle(multiplierBps: number) {
@@ -47,7 +49,7 @@ export default function ScratchModal({
   const [phase, setPhase] = useState<GamePhase>(() => {
     const state = live.data ? cardStateName(live.data) : "sealed";
     return state === "revealed"
-      ? "revealed"
+      ? "scratch_ready"
       : state === "claimed"
         ? "claimed"
         : state === "randomnessRequested"
@@ -91,8 +93,10 @@ export default function ScratchModal({
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
+  const lastPoint = useRef<{ x: number; y: number } | null>(null);
   const firedTx = useRef(false);
   const scratchPct = useRef(0);
+  const lastMeasureAt = useRef(0);
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -108,16 +112,7 @@ export default function ScratchModal({
   // ---- foil -------------------------------------------------------------
   useEffect(() => {
     const c = canvasRef.current;
-    if (
-      !c ||
-      (phase !== "ready" &&
-        !(
-          phase === "awaiting_vrf" &&
-          live.data &&
-          cardStateName(live.data) === "randomnessRequested"
-        ))
-    )
-      return;
+    if (!c) return;
     const ctx = c.getContext("2d")!;
     const g = ctx.createLinearGradient(0, 0, FOIL_W, FOIL_H);
     // Use the same champagne foil material as the sealed-ticket artwork.
@@ -149,7 +144,7 @@ export default function ScratchModal({
       FOIL_W / 2,
       FOIL_H / 2 + 18,
     );
-  }, [phase]);
+  }, []);
 
   useEffect(() => {
     if (
@@ -163,7 +158,7 @@ export default function ScratchModal({
       .then((card) => {
         if (cancelled) return;
         setOutcome(card);
-        if (scratchPct.current > REVEAL_PCT) setPhase("revealed");
+        setPhase("scratch_ready");
       })
       .catch((e) => {
         if (cancelled) return;
@@ -178,28 +173,36 @@ export default function ScratchModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const measure = useCallback(() => {
+  const measure = () => {
     const c = canvasRef.current;
     if (!c) return;
     const ctx = c.getContext("2d")!;
     const img = ctx.getImageData(0, 0, FOIL_W, FOIL_H).data;
     let clear = 0;
-    const total = FOIL_W * FOIL_H;
-    for (let i = 3; i < img.length; i += 4 * 16) if (img[i] < 128) clear++;
-    scratchPct.current = clear / (total / 16);
-    maybeReveal();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [outcome]);
-
-  const maybeReveal = useCallback(() => {
+    let samples = 0;
+    let centerClear = 0;
+    let centerSamples = 0;
+    for (let y = 0; y < FOIL_H; y += 4) {
+      for (let x = 0; x < FOIL_W; x += 4) {
+        const erased = img[(y * FOIL_W + x) * 4 + 3] < 128;
+        samples++;
+        if (erased) clear++;
+        if (x >= 70 && x < 330 && y >= 75 && y < 285) {
+          centerSamples++;
+          if (erased) centerClear++;
+        }
+      }
+    }
+    scratchPct.current = clear / samples;
     if (
-      scratchPct.current > REVEAL_PCT &&
-      outcome &&
-      phase === "awaiting_vrf"
+      scratchPct.current >= REVEAL_PCT &&
+      centerClear / centerSamples >= CENTER_REVEAL_PCT
     ) {
+      drawing.current = false;
+      lastPoint.current = null;
       setPhase("revealed");
     }
-  }, [outcome, phase]);
+  };
 
   const pointerPos = (e: React.PointerEvent) => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -213,9 +216,18 @@ export default function ScratchModal({
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
     ctx.globalCompositeOperation = "destination-out";
+    ctx.lineWidth = BRUSH_SIZE;
+    ctx.lineCap = "round";
+    if (lastPoint.current) {
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
     ctx.beginPath();
-    ctx.arc(x, y, 28, 0, Math.PI * 2);
+    ctx.arc(x, y, BRUSH_SIZE / 2, 0, Math.PI * 2);
     ctx.fill();
+    lastPoint.current = { x, y };
   };
 
   // ---- game actions -------------------------------------------------------
@@ -234,8 +246,7 @@ export default function ScratchModal({
       setPhase("awaiting_vrf");
       const revealed = await waitForReveal(live);
       setOutcome(revealed);
-      // If the player already cleared the foil while waiting, reveal now.
-      if (scratchPct.current > REVEAL_PCT) setPhase("revealed");
+      setPhase("scratch_ready");
     } catch (e: any) {
       firedTx.current = false;
       setError(e.message?.slice(0, 140) ?? "scratch failed");
@@ -258,7 +269,11 @@ export default function ScratchModal({
       });
       onClaimed();
     } catch (e: any) {
-      setError(e.message?.slice(0, 140) ?? "claim failed");
+      setError(
+        /StalePrice|Asset price is stale|6008/.test(e.message ?? "")
+          ? `Your win is saved. The ${live.asset.symbol} reference price is too old for a payout. The price keeper must update it before you retry the claim.`
+          : e.message?.slice(0, 140) ?? "Claim failed. Try again.",
+      );
       setFailedAction("claim");
       setPhase("error");
     }
@@ -280,6 +295,12 @@ export default function ScratchModal({
       ];
   const busy =
     phase === "scratching" || phase === "settling" || phase === "claiming";
+  const resultVisible =
+    phase === "revealed" ||
+    phase === "settling" ||
+    phase === "claiming" ||
+    phase === "claimed" ||
+    (phase === "error" && failedAction === "claim");
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -305,9 +326,7 @@ export default function ScratchModal({
   }, [busy, onClose]);
 
   const revealWithoutScratching = () => {
-    scratchPct.current = 1;
-    if (outcome && phase === "awaiting_vrf") setPhase("revealed");
-    else if (phase === "ready") startScratch();
+    if (phase === "scratch_ready") setPhase("revealed");
   };
 
   return (
@@ -318,7 +337,7 @@ export default function ScratchModal({
         aria-modal="true"
         aria-labelledby="scratch-title"
         className={`scratch-modal relative box-border w-full max-w-md max-h-[92dvh] overflow-x-hidden overflow-y-auto border border-border transition-shadow ${
-          style?.glow ?? ""
+          resultVisible ? style?.glow ?? "" : ""
         }`}
       >
         {/* header */}
@@ -354,8 +373,8 @@ export default function ScratchModal({
           className="scratch-stage mb-5"
           aria-label={`Card status: ${phase}`}
         >
-          <span className="is-complete" />
-          <span className={outcome ? "is-complete" : ""} />
+          <span className={phase !== "ready" ? "is-complete" : ""} />
+          <span className={resultVisible ? "is-complete" : ""} />
           <span className={phase === "claimed" ? "is-complete" : ""} />
         </div>
         {/* card face + foil */}
@@ -363,9 +382,15 @@ export default function ScratchModal({
           className="mb-3 text-sm text-muted-foreground"
           style={{ width: CARD_CSS_WIDTH }}
         >
-          {outcome
-            ? `Three ${live.asset.symbol} symbols win. Your result is shown below.`
-            : `Scratch the foil to reveal three tickers. Three ${live.asset.symbol} symbols win.`}
+          {phase === "ready"
+            ? `Confirm the scratch in your wallet first. Then uncover three tickers; three ${live.asset.symbol} symbols win.`
+            : phase === "scratching"
+              ? "Confirm the scratch in your wallet. The foil will be ready when the draw finishes."
+              : phase === "awaiting_vrf"
+                ? "Your draw is being prepared. The foil is yours to scratch in a moment."
+                : phase === "scratch_ready"
+                  ? `Now scratch the foil to uncover your three tickers. Three ${live.asset.symbol} symbols win.`
+                  : `Three ${live.asset.symbol} symbols win. Your result is below.`}
         </p>
         <div
           className="scratch-card-face relative overflow-hidden"
@@ -374,7 +399,8 @@ export default function ScratchModal({
           {/* prize panel under the foil */}
           <div
             className="scratch-result absolute inset-0 flex flex-col items-center justify-center gap-2 p-5 text-center"
-            aria-live="polite"
+            aria-live={resultVisible ? "polite" : "off"}
+            aria-hidden={!resultVisible}
           >
             {outcome ? (
               <>
@@ -389,36 +415,40 @@ export default function ScratchModal({
                     </span>
                   ))}
                 </div>
-                <div className={`text-xs tracking-widest ${style!.text}`}>
-                  {style!.label}
-                </div>
-                {outcome.multiplierBps > 0 ? (
+                {resultVisible && (
                   <>
-                    <div
-                      className={`font-display font-num text-5xl font-semibold tnum ${style!.text}`}
-                    >
-                      {formatMultiplier(outcome.multiplierBps)}
+                    <div className={`text-xs tracking-widest ${style!.text}`}>
+                      {style!.label}
                     </div>
-                    <div className="mt-2 max-w-full text-sm text-muted-foreground">
-                      You won{" "}
-                      <span className="font-num text-foreground">
-                        ${prizeUsd?.toLocaleString()}
-                      </span>{" "}
-                      worth of devnet {live.asset.symbol} tokens.
-                      {phase !== "claimed" &&
-                        " Claim to send them to your wallet."}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div
-                      className={`font-display text-3xl font-semibold ${style!.text}`}
-                    >
-                      No prize
-                    </div>
-                    <div className="mt-1 text-sm text-muted-foreground">
-                      No three {live.asset.symbol} match this time.
-                    </div>
+                    {outcome.multiplierBps > 0 ? (
+                      <>
+                        <div
+                          className={`font-display font-num text-5xl font-semibold tnum ${style!.text}`}
+                        >
+                          {formatMultiplier(outcome.multiplierBps)}
+                        </div>
+                        <div className="mt-2 max-w-full text-sm text-muted-foreground">
+                          You won{" "}
+                          <span className="font-num text-foreground">
+                            ${prizeUsd?.toLocaleString()}
+                          </span>{" "}
+                          worth of devnet {live.asset.symbol} tokens.
+                          {phase !== "claimed" &&
+                            " Claim to send them to your wallet."}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          className={`font-display text-3xl font-semibold ${style!.text}`}
+                        >
+                          No prize
+                        </div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          No three {live.asset.symbol} match this time.
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </>
@@ -432,34 +462,50 @@ export default function ScratchModal({
           </div>
 
           {/* the foil itself */}
-          {phase !== "revealed" && phase !== "claimed" && (
-            <canvas
+          <canvas
               ref={canvasRef}
               width={FOIL_W}
               height={FOIL_H}
-              className="absolute inset-0 h-full w-full cursor-crosshair touch-none"
+              aria-label="Scratch the gold foil to reveal your result"
+              className={`scratch-foil absolute inset-0 h-full w-full touch-none ${resultVisible ? "is-revealed" : ""} ${phase === "scratch_ready" ? "cursor-crosshair" : "cursor-default"}`}
               onPointerDown={(e) => {
+                if (phase !== "scratch_ready") return;
                 e.currentTarget.setPointerCapture(e.pointerId);
                 drawing.current = true;
+                lastPoint.current = null;
                 const p = pointerPos(e);
                 erase(p.x, p.y);
-                startScratch();
               }}
               onPointerMove={(e) => {
                 if (!drawing.current) return;
                 const p = pointerPos(e);
                 erase(p.x, p.y);
+                if (performance.now() - lastMeasureAt.current >= 90) {
+                  lastMeasureAt.current = performance.now();
+                  measure();
+                }
+              }}
+              onPointerUp={() => {
+                if (!drawing.current) return;
+                drawing.current = false;
+                lastPoint.current = null;
                 measure();
               }}
-              onPointerUp={() => (drawing.current = false)}
-              onPointerCancel={() => (drawing.current = false)}
+              onPointerCancel={() => {
+                drawing.current = false;
+                lastPoint.current = null;
+              }}
             />
-          )}
         </div>
 
         {/* footer status / actions */}
         <div className="mt-4" style={{ width: CARD_CSS_WIDTH }}>
-          {(phase === "ready" || phase === "awaiting_vrf") && (
+          {phase === "ready" && (
+            <button type="button" onClick={startScratch} className="button-primary mb-3 w-full">
+              Start scratch · confirm in wallet
+            </button>
+          )}
+          {phase === "scratch_ready" && (
             <button
               type="button"
               onClick={revealWithoutScratching}
@@ -479,7 +525,12 @@ export default function ScratchModal({
           )}
           {phase === "awaiting_vrf" && (
             <div className="text-center text-xs text-muted-foreground">
-              Waiting for MagicBlock VRF. Keep scratching…
+              Waiting for MagicBlock VRF. Your foil is still sealed.
+            </div>
+          )}
+          {phase === "scratching" && (
+            <div className="text-center text-xs text-muted-foreground" role="status">
+              Waiting for wallet confirmation…
             </div>
           )}
           {phase === "revealed" && (
@@ -514,12 +565,14 @@ export default function ScratchModal({
             <ShieldCheck size={13} />
             Result drawn from your card’s saved prize table.
           </p>
-          <VerificationReceipt
-            card={live.pubkey}
-            outcome={outcome}
-            receipt={receipt}
-            onEndpoint={recordErEndpoint}
-          />
+          {resultVisible && (
+            <VerificationReceipt
+              card={live.pubkey}
+              outcome={outcome}
+              receipt={receipt}
+              onEndpoint={recordErEndpoint}
+            />
+          )}
         </div>
       </div>
     </div>

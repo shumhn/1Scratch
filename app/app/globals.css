@@ -1294,6 +1294,15 @@ button:not(:disabled):active,
   border-radius: 14px;
   border: 1px solid hsl(var(--border));
 }
+.scratch-foil.is-revealed {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scratch-foil {
+    transition: opacity 300ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}
 .scratch-result {
   background:
     radial-gradient(

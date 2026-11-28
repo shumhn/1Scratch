@@ -28,6 +28,7 @@ export type GamePhase =
   | "ready"
   | "scratching"
   | "awaiting_vrf"
+  | "scratch_ready"
   | "revealed"
   | "settling"
   | "claiming"
@@ -67,8 +68,10 @@ export async function buyAndDelegate(
   base: Connection,
   wallet: any,
   asset: PrizeAsset,
-  owner: PublicKey
+  owner: PublicKey,
+  onStage?: (stage: "preparing" | "wallet" | "submitting" | "confirming") => void,
 ): Promise<LiveCard> {
+  onStage?.("preparing");
   const program = getProgram(base, wallet);
   const house: any = await program.account.house.fetch(HOUSE);
   const cardId = (house.cardNonce as BN).toNumber();
@@ -93,10 +96,17 @@ export async function buyAndDelegate(
     .instruction();
 
   const tx = new Transaction().add(buyIx, delegateIx);
-  const sig = await wallet.sendTransaction(tx, base);
-  await base.confirmTransaction(sig, "confirmed");
+  const { signature, blockhash, lastValidBlockHeight } =
+    await wallet.sendTransaction(tx, base, onStage);
+  onStage?.("confirming");
+  const confirmation = await base.confirmTransaction(
+    { signature, blockhash, lastValidBlockHeight },
+    "confirmed",
+  );
+  if (confirmation.value.err)
+    throw new Error(`Card transaction failed on devnet: ${JSON.stringify(confirmation.value.err)}`);
 
-  return { pubkey: card, id: cardId, asset, buySignature: sig };
+  return { pubkey: card, id: cardId, asset, buySignature: signature };
 }
 
 /** Fire the VRF scratch on the Ephemeral Rollup hosting this card. */

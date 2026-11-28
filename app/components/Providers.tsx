@@ -8,7 +8,13 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  SendTransactionError,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { BASE_RPC } from "@/lib/consts";
 import { detectWallets, InjectedWallet } from "@/lib/wallet";
 
@@ -25,7 +31,8 @@ export interface WalletCtxValue {
   sendTransaction: (
     tx: Transaction,
     connection?: Connection,
-  ) => Promise<string>;
+    onStage?: (stage: "wallet" | "submitting") => void,
+  ) => Promise<{ signature: string; blockhash: string; lastValidBlockHeight: number }>;
   signTransaction: (tx: Transaction) => Promise<Transaction>;
   signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>;
 }
@@ -118,13 +125,70 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       connecting,
       connect,
       disconnect,
-      sendTransaction: async (tx, connection = baseConnection) => {
+      sendTransaction: async (tx, connection = baseConnection, onStage) => {
         if (!injected || !publicKey) throw new Error("wallet not connected");
-        const { blockhash } = await connection.getLatestBlockhash();
+        const { context, value: { blockhash, lastValidBlockHeight } } =
+          await connection.getLatestBlockhashAndContext("confirmed");
         tx.recentBlockhash = blockhash;
         tx.feePayer = publicKey;
+        onStage?.("wallet");
         const signed = await injected.provider.signTransaction(tx);
-        return connection.sendRawTransaction(signed.serialize());
+        onStage?.("submitting");
+        try {
+          const raw = signed.serialize();
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const signature = await connection.sendRawTransaction(raw, {
+                preflightCommitment: "confirmed",
+                minContextSlot: context.slot,
+                maxRetries: 3,
+              });
+              return { signature, blockhash, lastValidBlockHeight };
+            } catch (error) {
+              const message = error instanceof SendTransactionError
+                ? error.transactionError.message
+                : error instanceof Error ? error.message : "";
+              if (
+                attempt === 2 ||
+                !/blockhash not found|minimum context slot|node is behind/i.test(message)
+              ) throw error;
+              // Retry the same signed bytes: this cannot create a second card.
+              await new Promise((resolve) => setTimeout(resolve, 450));
+            }
+          }
+          throw new Error("Could not submit card transaction. Try again.");
+        } catch (error) {
+          if (!(error instanceof SendTransactionError)) throw error;
+          const logs: string[] = [
+            ...((await error.getLogs(connection).catch(() => [])) ?? []),
+          ];
+          let simulationError: unknown;
+          if (!logs.length) {
+            try {
+              const transaction = VersionedTransaction.deserialize(signed.serialize());
+              const simulation = await connection.simulateTransaction(transaction, {
+                commitment: "confirmed",
+                replaceRecentBlockhash: true,
+                sigVerify: false,
+              });
+              simulationError = simulation.value.err;
+              logs.push(...(simulation.value.logs ?? []));
+            } catch {
+              // The original RPC error is still useful if diagnostics are unavailable.
+            }
+          }
+          const programError = logs.find((line) =>
+            /Error Code:|Error:|custom program error|insufficient funds/i.test(line),
+          );
+          const technicalDetail = programError ??
+            (simulationError ? JSON.stringify(simulationError) : error.transactionError.message);
+          const detail = /InsufficientFundsForFee|insufficient funds|attempt to debit an account/i.test(technicalDetail)
+            ? "Not enough devnet SOL for the network fee and delegation deposit. Add devnet SOL, then try again."
+            : simulationError === null && !logs.length
+              ? "RPC preflight failed, but a fresh simulation passed. This looks temporary; try again."
+              : technicalDetail;
+          throw new Error(`Card transaction failed: ${detail}`);
+        }
       },
       signTransaction: async (tx) => {
         if (!injected) throw new Error("wallet not connected");
