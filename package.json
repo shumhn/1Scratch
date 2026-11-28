@@ -5,6 +5,7 @@
   "description": "VRF scratch cards that pay prizes in tokenized stocks & Solana assets \u2014 MagicBlock ER + VRF",
   "scripts": {
     "build": "anchor build",
+    "dev:all": "node scripts/dev_all.mjs",
     "setup:devnet": "tsx scripts/setup_devnet.ts",
     "keeper": "tsx keeper/src/index.ts",
     "e2e": "tsx scripts/e2e_scratch.ts",

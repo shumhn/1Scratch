@@ -10,10 +10,12 @@ Use Node.js 22 or later. The existing devnet deployment is configured in `app/li
 npm ci
 npm --prefix app ci
 cp app/.env.example app/.env.local
-npm --prefix app run dev
+npm run dev:all
 ```
 
 Open `http://localhost:3000/` for the landing page and `http://localhost:3000/play` for the game. Open the game in a browser with Phantom or Solflare, select devnet, and connect a wallet funded with devnet SOL and this app's devnet USDC mint. The header's Funds action is available when the server faucet is configured.
+
+`dev:all` starts the Next.js frontend and the price keeper, restarting the keeper after transient failures. The keeper requires a keypair matching `House.keeper`; by default it reads `~/.config/solana/id.json`. If you only need the UI, `npm --prefix app run dev` starts it without price updates, so claims can become stale.
 
 The production frontend can be built and started with:
 
@@ -38,7 +40,7 @@ Vercel hosts the web app and its optional API route. Run the reference-price kee
 
 ### Keep reference prices fresh
 
-The price keeper signs devnet price updates using the keeper authorized in the `House` account. It requests Jupiter mainnet token quotes, and uses the configured fallback prices if live sources are unavailable. Only the reference-price requests use mainnet; the keeper's transactions are sent to devnet.
+The price keeper signs devnet price updates using the keeper authorized in the `House` account. For each asset it requests a Jupiter mainnet quote for selling one token into USDC. This is a secondary-market token swap quote, not the underlying exchange share price. Only quote requests use mainnet; price transactions are sent to devnet. If no live quote is available, the keeper leaves the last on-chain price and timestamp unchanged so it can expire rather than passing a static fallback off as fresh. `ALLOW_STATIC_PRICE_FALLBACK=1` restores configured static prices for isolated demos only.
 
 Build the program first so the keeper can load `target/idl/scratchers.json`:
 
@@ -47,7 +49,9 @@ anchor build
 KEEPER_KEYPAIR=/absolute/path/to/authorized-keeper.json npm run keeper
 ```
 
-The repository pins Rust 1.89.0, Anchor Rust crates 1.1.2, and MagicBlock's Rust ER SDK 0.18.0. Use the compatible Anchor CLI 1.1.2 and Solana SBF build tools. Additional keeper settings are documented in `keeper/.env.example`; export them in your shell because the keeper does not load that file automatically. Its default refresh cycle is 30 seconds. Claims and treasury sales reject stale reference prices.
+The repository pins Rust 1.89.0, Anchor Rust crates 1.1.2, and MagicBlock's Rust ER SDK 0.18.0. Use the compatible Anchor CLI 1.1.2 and Solana SBF build tools. Additional keeper settings are documented in `keeper/.env.example`; export them in your shell because the keeper does not load that file automatically. The keeper waits 30 seconds between full cycles, plus time spent quoting and submitting seven assets; the UI polls devnet every 15 seconds. Claims and treasury sales reject prices older than the House limit.
+
+If a claim reports `StalePrice`, check that the authorized keeper is running. The deployed House currently allows a reference price to be at most one hour old. For immediate recovery, run `ONCE=1 npm run keeper` with the authorized keypair, then retry the claim. A one-time update expires again; host the keeper as a supervised process for the public app. The keeper refreshes an unchanged price before it reaches half the House's maximum age and continues after individual RPC failures.
 
 ### Set up your own devnet deployment
 

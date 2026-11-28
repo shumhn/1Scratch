@@ -60,8 +60,8 @@ Instructions: `initialize_house`, `add_asset`, `set_price` (keeper),
 
 ## Fee realities (from the skill)
 
-- Delegation deposit ≈ 2.8–3.3M lamports per card (~$0.0004), paid by player,
-  partially refunded on undelegate.
+- Delegation deposit ≈ 2.8–3.3M lamports per card, paid by the player.
+  The current MagicBlock session fee can consume the whole deposit at undelegation.
 - Commit #11+ per account fails without a fee vault — our cards commit exactly
   once (settle) then undelegate. Non-issue.
 - Cards are ~200 bytes, far under the 10,240-byte commit cap.
