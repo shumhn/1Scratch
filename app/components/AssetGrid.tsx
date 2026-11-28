@@ -63,6 +63,9 @@ export default function AssetGrid({
   const { cardPrice, error: houseError, refresh: refreshHouse } = useHouse();
   const [selectedSymbol, setSelectedSymbol] = useState(stocks[0].symbol);
   const [busy, setBusy] = useState(false);
+  const [buyStage, setBuyStage] = useState<
+    "preparing" | "wallet" | "submitting" | "confirming"
+  >("preparing");
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get("ticker");
@@ -104,14 +107,15 @@ export default function AssetGrid({
     }
     const asset = stocks.find((item) => item.symbol === selectedSymbol)!;
     setBusy(true);
+    setBuyStage("preparing");
     setError(null);
     try {
       onBought(
-        await buyAndDelegate(connection, wallet, asset, wallet.publicKey),
+        await buyAndDelegate(connection, wallet, asset, wallet.publicKey, setBuyStage),
       );
     } catch (e: any) {
       setError(
-        e.message?.slice(0, 160) ?? "Could not buy your card. Try again.",
+        e.message?.slice(0, 500) ?? "Could not buy your card. Try again.",
       );
     } finally {
       setBusy(false);
@@ -150,7 +154,7 @@ export default function AssetGrid({
                 ) : (
                   <span className="skeleton inline-block h-4 w-16" />
                 )}
-                <small>reference price</small>
+                <small>xStock sell quote</small>
               </span>
               <span className="stock-radio">
                 {selectedSymbol === asset.symbol && <Check size={12} />}
@@ -188,7 +192,12 @@ export default function AssetGrid({
         >
           <Fingerprint size={20} />
           {busy
-            ? "Confirming your card…"
+            ? {
+                preparing: "Preparing your card…",
+                wallet: "Confirm in your wallet…",
+                submitting: "Submitting transaction…",
+                confirming: "Confirming on devnet…",
+              }[buyStage]
             : wallet.connecting
               ? "Connecting…"
               : wallet.publicKey
@@ -196,10 +205,17 @@ export default function AssetGrid({
                 : "Connect wallet to play"}
           <ArrowUpRight size={19} />
         </button>
+        {busy && buyStage === "wallet" && (
+          <p className="purchase-caption" role="status">
+            If no popup appears, open your wallet extension to review the request.
+          </p>
+        )}
         <p className="purchase-caption">
-          Includes a small devnet SOL delegation deposit.
+          Phantom may label the devnet USDC card charge “Unknown”.
           <br />
-          Your wallet confirms every transaction.
+          About 0.00491 devnet SOL funds card and delegation accounts; the network fee is separate.
+          <br />
+          The delegation deposit may be spent as a session fee. About 0.00170 SOL remains locked in the card account.
         </p>
         <a href="#odds" className="purchase-odds-link">
           View the prize odds <ArrowUpRight size={13} aria-hidden="true" />
@@ -233,15 +249,15 @@ export default function AssetGrid({
       >
         <span className="status-dot" />
         {priceStale
-          ? "Reference prices need an update"
-          : "Keeper reference prices"}
+          ? "xStock quotes need an update"
+          : "Mainnet xStock → USDC quotes"}
         {prices[selectedSymbol]
           ? ` · updated ${relativeTime(prices[selectedSymbol].updatedAt)}`
           : " · loading from devnet"}
         <span>
           {priceStale
-            ? "Claiming or selling requires a fresh reference price."
-            : "Reference prices value your payout. Card entry stays the same."}
+            ? "Claiming or selling requires a fresh quote."
+            : "These are token swap quotes, not Nasdaq share prices. Keeper checks about every 30s; this page reads devnet every 15s."}
         </span>
       </div>
     </div>

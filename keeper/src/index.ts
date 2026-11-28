@@ -6,12 +6,14 @@
  *      — xStock mocks priced off their real mainnet mints, crypto off
  *      canonical mints. (unwindfi-proven pattern; 1 quote/sec + retries,
  *      because the public endpoint rate-limits.)
- *   2. Fall back to config fallback_price_usd so the demo never breaks.
+ *   2. Skip the update if no live quote is available, so an old static value
+ *      cannot be marked fresh. Static fallback is opt-in for isolated demos.
  *   3. Push set_price(price_usd_e8) to the Asset PDA on devnet.
  *
  * Env:  RPC_URL        (devnet RPC that submits set_price txs)
  *       KEEPER_KEYPAIR (default ~/.config/solana/id.json — must be the house keeper)
  *       CYCLE_MS       (default 30000)
+ *       ALLOW_STATIC_PRICE_FALLBACK (default false; demo use only)
  */
 import { BN, Program, AnchorProvider, Wallet, Idl } from "@coral-xyz/anchor";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
@@ -27,6 +29,7 @@ const RPC_URL = process.env.RPC_URL ?? "https://rpc.magicblock.app/devnet";
 const KEYPAIR_PATH =
   process.env.KEEPER_KEYPAIR ?? join(homedir(), ".config", "solana", "id.json");
 const CYCLE_MS = Number(process.env.CYCLE_MS ?? 30_000);
+const ALLOW_STATIC_PRICE_FALLBACK = process.env.ALLOW_STATIC_PRICE_FALLBACK === "1";
 
 const JUPITER = "https://lite-api.jup.ag";
 const USDC_MAINNET = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // 6 dp
@@ -55,6 +58,7 @@ async function refDecimals(mint: string, fallback: number): Promise<number> {
   if (hit != null) return hit;
   try {
     const resp = await fetch(MAINNET_RPC, {
+      signal: AbortSignal.timeout(8_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -91,7 +95,7 @@ async function jupiterPriceUsd(mint: string, decimals: number): Promise<number |
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const url = `${JUPITER}/swap/v1/quote?inputMint=${mint}&outputMint=${USDC_MAINNET}&amount=${amount}&slippageBps=100`;
     try {
-      const resp = await fetch(url);
+      const resp = await fetch(url, { signal: AbortSignal.timeout(8_000) });
       if (resp.status === 429 || resp.status >= 500) {
         if (attempt < MAX_ATTEMPTS) {
           await sleep(delay);
@@ -102,11 +106,12 @@ async function jupiterPriceUsd(mint: string, decimals: number): Promise<number |
       }
       const body: any = await resp.json();
       if (resp.status === 400) {
-        if (body?.errorCode === "NO_ROUTES_FOUND") return null; // thin market — fallback
+        if (body?.errorCode === "NO_ROUTES_FOUND") return null;
         return null;
       }
       if (!resp.ok || !body?.outAmount) return null;
-      return Number(body.outAmount) / 1e6; // USDC per 1 token
+      const price = Number(body.outAmount) / 1e6; // USDC per 1 token
+      return Number.isFinite(price) && price > 0 ? price : null;
     } catch {
       if (attempt < MAX_ATTEMPTS) {
         await sleep(delay);
@@ -134,43 +139,53 @@ async function main() {
     [Buffer.from("house")],
     PROGRAM_ID
   );
+  const house: any = await (program.account as any).house.fetch(housePda);
+  const refreshAgeSecs = Math.max(
+    60,
+    Math.floor(Number(house.maxPriceAgeSecs.toString()) / 2),
+  );
 
   console.log(`Keeper: ${keeper.publicKey.toBase58()}`);
   console.log(`RPC:    ${RPC_URL}`);
   console.log(`Cycle:  ${CYCLE_MS / 1000}s — ${assetsCfg.assets.length} assets\n`);
-
-  // Prime every asset once on startup so claims work immediately.
-  let firstRun = true;
+  console.log(`Refresh unchanged prices after ${refreshAgeSecs}s\n`);
 
   for (;;) {
     for (const a of assetsCfg.assets) {
-      let quote: QuoteResult;
-      if (a.reference?.source === "jupiter") {
-        const refDec = await refDecimals(a.reference.mint, a.decimals);
-        const p = await jupiterPriceUsd(a.reference.mint, refDec);
-        quote = p != null ? { priceUsd: p, source: "jupiter" } : { priceUsd: a.fallback_price_usd, source: "fallback" };
-        await sleep(QUOTE_SPACING_MS);
-      } else {
-        quote = { priceUsd: a.fallback_price_usd, source: "fallback" };
-      }
-
-      const priceE8 = BigInt(Math.round(quote.priceUsd * 1e8));
-      const mint = new PublicKey(devnet.assets[a.symbol].mint);
-      const [assetPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("asset"), mint.toBuffer()],
-        PROGRAM_ID
-      );
-
-      // Skip the tx if the on-chain price already matches (saves fees).
-      if (!firstRun) {
-        const current: any = await (program.account as any).asset.fetch(assetPda);
-        if (current.priceUsdE8.toString() === priceE8.toString()) {
-          console.log(`${a.symbol.padEnd(6)} $${quote.priceUsd} (${quote.source}) — unchanged, skip`);
+      try {
+        let quote: QuoteResult | null = null;
+        if (a.reference?.source === "jupiter") {
+          const refDec = await refDecimals(a.reference.mint, a.decimals);
+          const p = await jupiterPriceUsd(a.reference.mint, refDec);
+          if (p != null) quote = { priceUsd: p, source: "jupiter" };
+          await sleep(QUOTE_SPACING_MS);
+        }
+        if (!quote && ALLOW_STATIC_PRICE_FALLBACK) {
+          quote = { priceUsd: a.fallback_price_usd, source: "fallback" };
+        }
+        if (!quote) {
+          console.warn(`${a.symbol.padEnd(6)} no live quote — price not refreshed`);
           continue;
         }
-      }
 
-      try {
+        const priceE8 = BigInt(Math.round(quote.priceUsd * 1e8));
+        const mint = new PublicKey(devnet.assets[a.symbol].mint);
+        const [assetPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("asset"), mint.toBuffer()],
+          PROGRAM_ID
+        );
+
+        // Equal prices still need a timestamp refresh before the claim limit.
+        const current: any = await (program.account as any).asset.fetch(assetPda);
+        const ageSecs = Math.floor(Date.now() / 1000) - Number(current.priceUpdatedAt.toString());
+        if (
+          current.priceUsdE8.toString() === priceE8.toString() &&
+          ageSecs >= 0 && ageSecs < refreshAgeSecs
+        ) {
+          console.log(`${a.symbol.padEnd(6)} $${quote.priceUsd} (${quote.source}) — fresh (${ageSecs}s), skip`);
+          continue;
+        }
+
         const sig = await program.methods
           .setPrice(new BN(priceE8.toString()))
           .accounts({ keeper: keeper.publicKey, house: housePda, asset: assetPda })
@@ -179,10 +194,9 @@ async function main() {
           `${a.symbol.padEnd(6)} $${quote.priceUsd} (${quote.source}) → set_price ${sig.slice(0, 12)}…`
         );
       } catch (e: any) {
-        console.error(`${a.symbol.padEnd(6)} set_price failed: ${e.message?.slice(0, 120)}`);
+        console.error(`${a.symbol.padEnd(6)} update failed: ${e.message?.slice(0, 180)}`);
       }
     }
-    firstRun = false;
     if (process.env.ONCE === "1") {
       console.log("— ONCE mode, exiting —");
       return;

@@ -2,10 +2,10 @@
   "cluster": "devnet",
   "_notes": [
     "Prize asset registry for Stock Scratchers. We mint MOCK devnet SPL tokens for",
-    "each asset; the reference section tells the keeper where to get the REAL price.",
+    "each asset; the reference section tells the keeper where to get a token swap quote.",
     "xStock mints verified by unwindfi research (2026-07); crypto mints are canonical.",
     "jupiter quotes 1 unit -> USDC on MAINNET via https://lite-api.jup.ag (no key).",
-    "fallback_price_usd is used when no live source answers (demo never breaks)."
+    "fallback_price_usd is only used with ALLOW_STATIC_PRICE_FALLBACK=1 (isolated demos)."
   ],
   "card_price_usdc": 1,
   "assets": [
